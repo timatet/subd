@@ -57,7 +57,6 @@ DB: Lessons
 Имя функции TeachersUnloading
 */
 
--- Bad working ?
 CREATE OR ALTER FUNCTION TeachersUnloading 
 ()
 RETURNS TABLE
@@ -65,28 +64,34 @@ AS RETURN
 (
 	WITH HelpCTE AS (
 		SELECT 
+			e.Id,
 			e.Name,
 			l.DayOfWeek,
 			COUNT(l.Id) AS CountLessons
 		FROM Employee e 
-		LEFT JOIN Lesson l ON e.Id = l.EmployeeId 
-		GROUP BY e.Name , l.DayOfWeek 
+		JOIN Lesson l ON e.Id = l.EmployeeId 
+		GROUP BY e.Name , e.Id, l.DayOfWeek 
 		--ORDER BY e.Name , l.DayOfWeek 
 	) 
 	SELECT 
-		h.Name AS 'Преподаватель',
-	    COALESCE(MAX(CASE WHEN DayOfWeek = 1
-          THEN h.CountLessons END), 0) AS 'Понедельник',
-	    COALESCE(MAX(CASE WHEN DayOfWeek = 2
-          THEN h.CountLessons END), 0) AS 'Вторник',
-	    COALESCE(MAX(CASE WHEN DayOfWeek = 3
-          THEN h.CountLessons END), 0) AS 'Среда',
-	    COALESCE(MAX(CASE WHEN DayOfWeek = 4
-          THEN h.CountLessons END), 0) AS 'Четверг',
-	    COALESCE(MAX(CASE WHEN DayOfWeek = 5
-          THEN h.CountLessons END), 0) AS 'Пятница'
-	FROM HelpCTE h
-	GROUP BY h.Name
+		tmp.Преподаватель, tmp.Понедельник, tmp.Вторник, tmp.Среда, tmp.Четверг, tmp.Пятница
+	FROM (
+		SELECT 
+			ROW_NUMBER() OVER (ORDER BY h.Id) AS N,
+			h.Name AS 'Преподаватель',
+		    COALESCE(MAX(CASE WHEN DayOfWeek = 1
+	          THEN h.CountLessons END), 0) AS 'Понедельник',
+		    COALESCE(MAX(CASE WHEN DayOfWeek = 2
+	          THEN h.CountLessons END), 0) AS 'Вторник',
+		    COALESCE(MAX(CASE WHEN DayOfWeek = 3
+	          THEN h.CountLessons END), 0) AS 'Среда',
+		    COALESCE(MAX(CASE WHEN DayOfWeek = 4
+	          THEN h.CountLessons END), 0) AS 'Четверг',
+		    COALESCE(MAX(CASE WHEN DayOfWeek = 5
+	          THEN h.CountLessons END), 0) AS 'Пятница'
+		FROM HelpCTE h
+		GROUP BY h.Name, h.Id
+	) AS tmp
 )
 
 /* #4
