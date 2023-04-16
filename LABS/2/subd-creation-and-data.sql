@@ -394,7 +394,7 @@ SET IDENTITY_INSERT insurance OFF;
 	
 SET IDENTITY_INSERT contracts ON;
 INSERT INTO contracts (contract_id,contract_date_start,contract_date_end,contract_total_amount,client_phone,tour_id,hotel_id,client_doc_number,transport_state_id,insurance_contract_id) VALUES
-	 (1,'2022-11-10','2022-11-14',12500.00,N'79151236460',2,5,N'7810121314',N'Н785ТР76',1),
+	 (1,'2022-11-10','2023-11-14',12500.00,N'79151236460',2,5,N'7810121314',N'Н785ТР76',1),
 	 (2,'2022-11-10','2022-11-14',13000.00,N'79151236466',2,5,N'7812121314',N'12345002',1),
 	 (8,'2021-06-05','2021-06-15',9625.00,N'79151236463',5,1,N'7812121319',N'Н785ТР76',2),
 	 (12,'2022-05-25','2022-06-14',14300.00,N'79803258456',15,19,N'7629559531',N'Х432ВХ76',3),
