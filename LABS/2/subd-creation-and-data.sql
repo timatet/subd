@@ -100,6 +100,7 @@ CREATE TABLE tours (
 	tour_name nvarchar(128) NULL,
 	tour_cost decimal(10,2) DEFAULT 0 NULL,
 	tour_food_type nvarchar(32) DEFAULT 'RO' NULL,
+  tour_duration	int	DEFAULT 1 NOT NULL,
 	state_id int NOT NULL,
 	PRIMARY KEY (tour_id),
 	FOREIGN KEY (state_id) REFERENCES states(state_id),
@@ -330,23 +331,23 @@ INSERT INTO insurance_types (insurance_type_id,insurance_type_name) VALUES
 SET IDENTITY_INSERT insurance_types OFF;
 	
 SET IDENTITY_INSERT tours ON;
-INSERT INTO tours (tour_id,tour_name,tour_cost,tour_food_type,state_id) VALUES
-	 (1,N'Пешком по золотому кольцу',5200.00,N'RO',2),
-	 (2,N'Каналы Санкт-Петербурга',9800.00,N'AI',3),
-	 (3,N'Золотая осень',2500.00,N'UAI',4),
-	 (4,N'Тур в Самарканд',16800.00,N'FB',9),
-	 (5,N'7 дней в Фетхие',56000.00,N'AI',13),
-	 (6,N'Ликийская тропа',27000.00,N'RO',12),
-	 (7,N'Новый год в Анапе',18200.00,N'FB',14),
-	 (8,N'Шавлинские озера',11000.00,N'RO',16),
-	 (9,N'Восхождение на Олимп',50000.00,N'UAI',18),
-	 (10,N'Поход в Ергаки',14300.00,N'RO',21),
-	 (11,N'Неделя на Таганае',16000.00,N'RO',23),
-	 (12,N'Велопоход на Кольский',37000.00,N'FB',26),
-	 (13,N'Рождество в Нюрнберге',45000.00,N'UAI',28),
-	 (14,N'Горнолыжный тур Германия',95110.00,N'HB',29),
-	 (15,N'Зимний Таганай',31000.00,N'FB',23),
-	 (16,N'На коньках по Байкалу',18100.00,N'RO',32);
+INSERT INTO tours (tour_id,tour_name,tour_cost,tour_food_type,state_id,tour_duration) VALUES
+	 (1,N'Пешком по золотому кольцу',5200.00,N'RO',2,10),
+	 (2,N'Каналы Санкт-Петербурга',9800.00,N'AI',3,7),
+	 (3,N'Золотая осень',2500.00,N'UAI',4,3),
+	 (4,N'Тур в Самарканд',16800.00,N'FB',9,12),
+	 (5,N'7 дней в Фетхие',56000.00,N'AI',13,7),
+	 (6,N'Ликийская тропа',27000.00,N'RO',12,14),
+	 (7,N'Новый год в Анапе',18200.00,N'FB',14,5),
+	 (8,N'Шавлинские озера',11000.00,N'RO',16,21),
+	 (9,N'Восхождение на Олимп',50000.00,N'UAI',18,35),
+	 (10,N'Поход в Ергаки',14300.00,N'RO',21,7),
+	 (11,N'Неделя на Таганае',16000.00,N'RO',23,7),
+	 (12,N'Велопоход на Кольский',37000.00,N'FB',26,21),
+	 (13,N'Рождество в Нюрнберге',45000.00,N'UAI',28,10),
+	 (14,N'Горнолыжный тур Германия',95110.00,N'HB',29,7),
+	 (15,N'Зимний Таганай',31000.00,N'FB',23,12),
+	 (16,N'На коньках по Байкалу',18100.00,N'RO',32,15);
 SET IDENTITY_INSERT tours OFF;
 
 SET IDENTITY_INSERT hotels ON;
