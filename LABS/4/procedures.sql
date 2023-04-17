@@ -5,12 +5,16 @@ CREATE OR ALTER PROCEDURE FiveStarsHotels
 AS 
 BEGIN 
 	SELECT 
-		*
-	FROM hotels h 
+		t.tour_name ,
+		h.hotel_name ,
+		h.hotel_stars_count 
+	FROM contracts c 
+	JOIN hotels h ON c.hotel_id = c.hotel_id 
+	JOIN tours t ON c.tour_id = t.tour_id 
 	WHERE h.hotel_stars_count = 5
 END
 
-EXEC FiveStarsHotels 
+EXEC FiveStarsHotels s 
 
 -- Процедура, на входе получающая тип транспорта и формирующая список 
 -- перевозчиков, предлагающих данный вид
@@ -33,7 +37,7 @@ EXEC CarriesByTransportType 'Самолет'
 -- (если клиент уже был у нас 2 или более раз, то делаем ему скидку 10%)
 CREATE OR ALTER PROCEDURE SearchTourCost
 	@TourId INT,
-	@CarrierINN CHAR(12),
+	@CarrierINN CHAR(12), -- TODO: Исправить ИНН на тип желаемый тип транспорта. Выбирать наилучшее предложение
 	@ClientPhone CHAR(20),
 	@StarCount INT,
 	@TourCost REAL OUTPUT

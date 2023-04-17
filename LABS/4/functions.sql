@@ -54,7 +54,7 @@ CREATE OR ALTER FUNCTION InsurancesStat
 RETURNS TABLE
 AS RETURN
 (
-	SELECT 
+	SELECT -- TODO: Добавить тур в отдельный атрибут приведения статистики
 		*
 	FROM (
 		SELECT 
@@ -73,7 +73,7 @@ SELECT * FROM dbo.InsurancesStat(2021)
 -- Наиболее популярные регионы это регионы в которое максимальное число оформленных контрактов
 
 CREATE OR ALTER FUNCTION PopularRegions ()
-RETURNS @ResTable TABLE 
+RETURNS @ResTable TABLE
 (
 	country_name NVARCHAR(32), 
 	state_name NVARCHAR(32), 
@@ -95,7 +95,8 @@ BEGIN
 	INSERT INTO @ResTable
   		SELECT
 			*
-		FROM res_table 
+		FROM res_table -- Использовать группировку или оконные функция. Искать максимум в каждой стране.
+									 -- Ожидается от каждой страны наиболее популярный регион 
   	WHERE count_tours = (SELECT MAX(count_tours) FROM res_table)
   RETURN
 END
