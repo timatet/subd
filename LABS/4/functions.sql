@@ -54,26 +54,29 @@ CREATE OR ALTER FUNCTION InsurancesStat
 RETURNS TABLE
 AS RETURN
 (
-	SELECT -- TODO: Добавить тур в отдельный атрибут приведения статистики
+	SELECT 
 		*
 	FROM (
 		SELECT 
-			COALESCE(i.insurance_agent_INN, 'Всего:') AS 'Страховой агент',
+			COALESCE(i.insurance_agent_INN, 'Страховок по этому туру:') AS 'Страховой агент',
+			COALESCE(t.tour_name, 'Страховок по всем турам') AS 'Тур',
 			COUNT(i.insurance_contract_id) AS 'Число выданных страховок'
 		FROM insurance_agents ia 
 		JOIN insurance i ON i.insurance_agent_INN = ia.insurance_agent_INN
+		JOIN contracts c ON c.insurance_contract_id = i.insurance_contract_id 
+		JOIN tours t ON c.tour_id = t.tour_id 
 		WHERE YEAR(i.insurance_conclusion_date) = @Year
-		GROUP BY ROLLUP (i.insurance_agent_INN)
+		GROUP BY CUBE (i.insurance_agent_INN, t.tour_name)
 	) res_table
 )
 
-SELECT * FROM dbo.InsurancesStat(2021)
+SELECT * FROM dbo.InsurancesStat(2022)
 
 -- Multi-statement-функция, выдающая список наиболее популярных регионов для каждой страны
 -- Наиболее популярные регионы это регионы в которое максимальное число оформленных контрактов
 
 CREATE OR ALTER FUNCTION PopularRegions ()
-RETURNS @ResTable TABLE
+RETURNS @ResTable TABLE 
 (
 	country_name NVARCHAR(32), 
 	state_name NVARCHAR(32), 
@@ -85,7 +88,8 @@ BEGIN
 		SELECT 
 		 	c.country_name,
 			s.state_name,
-		 	COUNT(t.tour_id) AS count_tours
+		 	COUNT(t.tour_id) AS count_tours,
+		 	RANK() OVER (PARTITION BY c.country_name ORDER BY COUNT(t.tour_id) DESC) AS rnk
 		FROM contracts contr
 		JOIN tours t ON t.tour_id = contr.tour_id 
 		JOIN states s ON t.state_id = s.state_id 
@@ -94,10 +98,11 @@ BEGIN
 	)
 	INSERT INTO @ResTable
   		SELECT
-			*
-		FROM res_table -- Использовать группировку или оконные функция. Искать максимум в каждой стране.
-									 -- Ожидается от каждой страны наиболее популярный регион 
-  	WHERE count_tours = (SELECT MAX(count_tours) FROM res_table)
+			country_name,
+			state_name,
+			count_tours
+		FROM res_table 
+  		WHERE rnk = 1
   RETURN
 END
 

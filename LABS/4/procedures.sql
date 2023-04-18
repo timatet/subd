@@ -37,7 +37,7 @@ EXEC CarriesByTransportType 'Самолет'
 -- (если клиент уже был у нас 2 или более раз, то делаем ему скидку 10%)
 CREATE OR ALTER PROCEDURE SearchTourCost
 	@TourId INT,
-	@CarrierINN CHAR(12), -- TODO: Исправить ИНН на тип желаемый тип транспорта. Выбирать наилучшее предложение
+	@CarrierType NVARCHAR(50),
 	@ClientPhone CHAR(20),
 	@StarCount INT,
 	@TourCost REAL OUTPUT
@@ -66,11 +66,18 @@ BEGIN
 		SET @OldTourCost = @TourCost
 	-- Подбор перевозчика
 	-- Учет, что клиент летит в обе стороны
-	SELECT
+	SELECT TOP 1
 		@OldTourCost = @TourCost,
-		@TourCost = @TourCost + c.carrier_cost * 2
-	FROM carriers c 
-	WHERE c.carrier_INN = @CarrierINN
+		@TourCost = @TourCost + carr.carrier_cost * 2
+	FROM carriers carr
+	JOIN transport tr ON tr.carrier_INN = carr.carrier_INN 
+	JOIN transport_types tt ON tr.transport_type_id = tt.transport_type_id 
+	LEFT JOIN contracts contr ON contr.transport_state_id = tr.transport_state_id 
+	WHERE ((contr.contract_date_start IS NULL AND contr.contract_date_end IS NULL) 
+	OR (DATEDIFF(DAY, GETDATE(), contr.contract_date_start) < 0 AND DATEDIFF(DAY, GETDATE(), contr.contract_date_end) < 0)
+	OR (DATEDIFF(DAY, GETDATE(), contr.contract_date_start) > 0 AND DATEDIFF(DAY, GETDATE(), contr.contract_date_end) > 0))
+	AND tt.transport_type_name = @CarrierType
+	ORDER BY carr.carrier_cost
 	IF @OldTourCost = @TourCost
 		THROW 60000, 'Перевозчика с заданными параметрами не существует', 1
 	ELSE 
@@ -113,7 +120,7 @@ SELECT * FROM clients c2
 -- Тур: Пешком по золотому кольцу, 10 дней
 -- Отель: Хостел Друзья
 DECLARE @TourCost REAL
-EXEC SearchTourCost 1, '7712040126', '79151236462', 4, @TourCost OUTPUT
+EXEC SearchTourCost 1, 'Самолет', '79151236462', 4, @TourCost OUTPUT
 SELECT @TourCost AS 'Стоимость тура'
 
 -- Процедура, вызывающая вложенную процедуру, которая подсчитывает среднюю стоимость 
