@@ -127,38 +127,37 @@ WHERE hotel_id = 8
 -- и поездка еще не закончилась – то удаление не происходит, 
 -- выдается соотв. сообщение, в противном случае тур удаляем.
 -- Если нет активных договоров, удаляем тур и договора
-CREATE OR ALTER TRIGGER DeletingContractsTrigger ON contracts
+CREATE OR ALTER TRIGGER DeletingToursTrigger ON tours
 INSTEAD OF DELETE 
 AS
 BEGIN
 	DECLARE 
-		@ContractId INT
-	DECLARE FetchContractsCursor CURSOR FOR
+		@TourId INT
+	DECLARE FetchToursCursor CURSOR FOR
 		SELECT 
-			deleted.contract_id
+			deleted.tour_id
 		FROM deleted
-	OPEN FetchContractsCursor
-	FETCH NEXT FROM FetchContractsCursor INTO 
-		@ContractId
+	OPEN FetchToursCursor
+	FETCH NEXT FROM FetchToursCursor INTO 
+		@TourId
 	WHILE @@FETCH_STATUS = 0
 	BEGIN
-		DECLARE @ContractDateStart DATE, @ContractDateEnd DATE
-		SELECT
-			@ContractDateStart = deleted.contract_date_start,
-			@ContractDateEnd = deleted.contract_date_end
-		FROM deleted
-		WHERE deleted.contract_id = @ContractId
-		IF DATEDIFF(DAY, GETDATE(), @ContractDateStart) <= 0 AND
-			DATEDIFF(DAY, GETDATE(), @ContractDateEnd) >= 0 
-			THROW 60000, 'Контракт недоступен для удаления поскольку сейчас активен', 1
-		ELSE 
-			DELETE FROM contracts
-			WHERE contract_id = @ContractId
-		FETCH NEXT FROM FetchContractsCursor INTO 
-			@ContractId
+		DECLARE @CountOfActiveContracts INT = 
+			(SELECT COUNT(*) FROM contracts c 
+			WHERE DATEDIFF(DAY, GETDATE(), c.contract_date_start) <= 0 AND
+			DATEDIFF(DAY, GETDATE(), c.contract_date_end) >= 0 
+			AND c.tour_id = @TourId)
+		--
+		IF @CountOfActiveContracts > 0
+			THROW 60000, 'Тур недоступен для удаления поскольку сейчас есть активные контракты', 1
+		--
+		DELETE FROM contracts WHERE contracts.tour_id = @TourId
+		DELETE FROM tours WHERE tours.tour_id = @TourId
+		FETCH NEXT FROM FetchToursCursor INTO 
+			@TourId
 	END
-	CLOSE FetchContractsCursor
-	DEALLOCATE FetchContractsCursor
+	CLOSE FetchToursCursor
+	DEALLOCATE FetchToursCursor
 END
 
 -- tour_id 2. contract_id 1
