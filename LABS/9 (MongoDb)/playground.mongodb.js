@@ -1,9 +1,44 @@
 // ЛАБОРАТОРНАЯ 9. MONGODB
 
-use('teterin-db')
+use('teterin-db');
 db.restaurants.find().limit(1)
 
 // Рестораны
+
+// Найти в каждом районе ресторан с Итальянской
+// с наименьшей оценкой
+use('teterin-db')
+db.restaurants.aggregate([
+  {
+    $match: {
+      cuisine: "Italian"
+    }
+  },
+  {
+    "$unwind": "$grades"
+  },
+  {
+    $group: {
+      _id: { 'borough': '$borough' },
+      name : { $first: '$name' },
+      cuisine: { $first: '$cuisine' },
+      minScore: { $min: '$grades.score' }
+    }
+  },
+  {
+    $project: 
+    {
+      _id: 0,
+      borough: "$_id.borough",
+      restaurant: '$name',
+      cuisine: '$cuisine',
+      score: '$minScore'
+    }
+  },
+  {
+    "$sort": { "borough": 1 } 
+  }
+])
 
 // 1
 // Выведите все документы коллекции Ресторан в формате: 
@@ -224,8 +259,10 @@ db.restaurants.find({ 'restaurant_id': "1201120112" })
 // В добавленном ресторане укажите информацию о 
 // времени его работы
 use('teterin-db')
-db.restaurants.updateMany(
-  {}, 
+db.restaurants.updateOne(
+  {
+    'restaurant_id' : '1201120112'
+  }, 
   { 
     $set: 
     {
@@ -239,6 +276,9 @@ db.restaurants.updateMany(
 
 use('teterin-db')
 db.restaurants.find({ 'restaurant_id': "1201120112" })
+
+use('teterin-db')
+db.restaurants.find().limit(10)
 
 // 12
 // Измените время работы вашего любимого ресторана
@@ -268,7 +308,7 @@ db.weather.aggregate(
     {
       $group : 
       {
-        _id:"$year", 
+        _id: "$year", 
         min: { $min: "$temperature" }, 
         max: { $max: "$temperature" } 
       } 
@@ -282,3 +322,245 @@ db.weather.aggregate(
     }
   ]
 )
+
+// 2
+// Какова средняя температура в году, если исключить 10 дней с самой 
+// низкой температурой и 10 дней с самой высокой?
+use('teterin-db');
+db.weather.aggregate(
+  [
+    {
+      $group : 
+      {
+        _id: {
+          year: "$year",
+          month: "$month",
+          day: "$day"
+        },
+        avg_temp: {
+          $avg: '$temperature'
+        },
+      }
+    }, 
+    { 
+      "$sort": { "avg_temp": 1 } 
+    },
+    {
+      "$skip": 10
+    },
+    {
+      "$sort": { "avg_temp": -1 } 
+    },
+    {
+      "$skip": 10
+    },
+    {
+      $group: 
+      {
+        _id: '$_id.year', 
+        temperature: { $avg: '$avg_temp'} 
+      }
+    }
+  ]  
+)
+
+// 3
+// Найти первые 10 записей с самой низкой погодой, когда дул ветер 
+// с юга и посчитайте  среднюю температуры для этих записей
+use('teterin-db');
+db.weather.aggregate(
+  [
+    {
+      $match: {
+        "wind_direction": "Южный"
+      }
+    },
+    {
+      "$sort": { "temperature": 1 }
+    },
+    {
+      "$limit": 10
+    },
+    {
+      $group: {
+        _id: "$year", 
+        temperature: { $avg: '$temperature'} 
+      }
+    }
+  ]
+)
+
+// 4
+// Подсчитайте количество дней, когда шел снег. 
+// (Будем считать снегом осадки, которые выпали,  
+// когда температура была ниже нуля
+use('teterin-db');
+db.weather.aggregate(
+  [
+    {
+      $match: {
+        "temperature": { $lt: 0 }
+      }
+    },
+    {
+      $group: 
+      {
+        _id: {
+          year: "$year",
+          month: "$month",
+          day: "$day"
+        },
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $count: "count_days"
+    }
+  ]
+)
+
+// 5
+// В течение зимы иногда шел снег, а иногда дождь. 
+// Насколько больше (или меньше) выпало осадков в виде снега.
+use('teterin-db');
+db.weather.aggregate(
+  [
+    {
+      $match: {
+        "month": { $in: [1, 2, 12] }
+      }
+    },
+    {
+      $project: {
+        _id: {
+          year: "$year",
+          month: "$month",
+          day: "$day"
+        },
+        lessThan0: { 
+          $cond: [ { $lt: ["$temperature", 0 ] }, 1, 0]
+        },
+        moreThan0: { 
+          $cond: [ { $gt: [ "$temperature", 0 ] }, 1, 0]
+        }
+      }
+    },
+    {
+      $group: {
+          _id: "$_id.year",
+          countLessThan0: { $sum: "$lessThan0" },
+          countMoreThan0: { $sum: "$moreThan0" }
+      }
+    },
+    {
+      $project: 
+      {
+        _id: "$_id", 
+        temperature_sub: { $subtract: ["$countLessThan0", "$countMoreThan0"] }
+      }
+    }
+  ]
+)
+
+// 6
+// Какова вероятность того что в ясный день выпадут осадки? 
+// (Предположим, что день считается ясным, если ясная погода 
+// фиксируется более чем в 75% случаев)
+use('teterin-db');
+db.weather.aggregate(
+  [
+    {
+      $project: {
+        _id: {
+          year: "$year",
+          month: "$month",
+          day: "$day"
+        },
+        CL: {
+          $cond: [ { $eq: ["$code", 'CL'] }, 1, 0]
+        },
+        notCL: {
+          $cond: [ { $ne: ["$code", 'CL'] }, 1, 0]
+        }
+      }
+    },
+    {
+      $group: {
+        _id: '$_id',
+        sumCL: { $sum: "$CL" },
+        sumNotCL: { $sum: "$notCL" }
+      }
+    },
+    {
+      $project: {
+        _id: "$_id",
+        perc: { $multiply: [{$divide: ["$sumCL", { $add: ['$sumCL', '$sumNotCL'] }]}, 100] },
+        weathertype: {
+          $cond: { 
+            if: { $gte: [{ $multiply: [{$divide: ["$sumCL", { $add: ['$sumCL', '$sumNotCL'] }]}, 100] } , 75 ] }, 
+            then: 'Вероятно погода будет ясная', 
+            else: 'Вероятно погода будет пасмурная' 
+          }
+        }
+      }
+    },
+    // {
+    //   $group: {
+    //     _id: { year: '$_id.year' },
+    //     S: { $sum: { $cond: [ { $eq: ["$weathertype", 'S'] }, 1, 0] } },
+    //     R: { $sum: { $cond: [ { $eq: ["$weathertype", 'R'] }, 1, 0] } }
+    //   }
+    // }
+  ]
+)
+
+// 7
+// Увеличьте температуру на один градус при каждом измерении 
+// в нечетный день во время зимы.  На сколько градусов 
+// изменилась средняя температура?
+use('teterin-db');
+db.weather.aggregate([
+  {
+    $project: {
+      _id: '$year',
+      temperature: 1,
+      tempWithNotEvenDays: {
+        $cond: {
+          if: {
+            $and: [
+              { "month": { $in: [1, 2, 12] } },
+              { $eq: [{ $mod: ['$day', 2] }, 1]}
+            ]
+          },
+          then: { $add: ['$temperature', 1] },
+          else: { $add: ['$temperature', 0] }
+        }
+      }
+    }
+  },
+  {
+    $group: {
+      _id: '$_id',
+      temperature: { $avg: '$temperature' },
+      withNotEvenTemperature: { $avg: '$tempWithNotEvenDays' }
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      sub: {
+        $round: [
+          { $subtract: [
+            '$withNotEvenTemperature',
+            '$temperature'
+          ] },
+          5
+        ]
+      }
+    }
+  }
+]);
+
+
+use('teterin-db');
+db.weather.find().limit(10)
