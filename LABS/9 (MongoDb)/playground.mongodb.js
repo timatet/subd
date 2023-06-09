@@ -1,7 +1,7 @@
 // ЛАБОРАТОРНАЯ 9. MONGODB
 
 use('teterin-db');
-db.restaurants.find().limit(1)
+db.restaurants.find({ '_id': '6480836616c176bb8a05460a' })
 
 // Рестораны
 
@@ -15,28 +15,34 @@ db.restaurants.aggregate([
     }
   },
   {
-    "$unwind": "$grades"
+    $unwind: "$grades"
   },
   {
     $group: {
-      _id: { 'borough': '$borough' },
-      name : { $first: '$name' },
-      cuisine: { $first: '$cuisine' },
-      minScore: { $min: '$grades.score' }
+      _id: { 
+        borough: '$borough',
+        name: '$name',
+        cuisine: '$cuisine'
+      },
+      minScoreForGrades: { 
+        $min: '$grades.score'
+      }
     }
   },
   {
-    $project: 
-    {
-      _id: 0,
-      borough: "$_id.borough",
-      restaurant: '$name',
-      cuisine: '$cuisine',
-      score: '$minScore'
+    $sort: { minScoreForGrades: 1 }
+  },
+  {
+    $group: {
+      _id: '$_id.borough',
+      name: { $first: '$_id.name' },
+      minScore: {
+        $min: '$minScoreForGrades'
+      }
     }
   },
   {
-    "$sort": { "borough": 1 } 
+    $sort: { "borough": 1 } 
   }
 ])
 
@@ -302,6 +308,8 @@ db.restaurants.find({ 'restaurant_id': "1201120112" })
 // 1
 // Какова разница между максимальной и минимальной 
 // температурой в течение года? 
+
+
 use('teterin-db');
 db.weather.aggregate(
   [
@@ -395,11 +403,15 @@ db.weather.aggregate(
 // (Будем считать снегом осадки, которые выпали,  
 // когда температура была ниже нуля
 use('teterin-db');
+db.weather.find().limit(10)
+
+use('teterin-db');
 db.weather.aggregate(
   [
     {
       $match: {
-        "temperature": { $lt: 0 }
+        "temperature": { $lt: 0 },
+        "code": { $nin: [ "CL" ] }
       }
     },
     {
@@ -427,7 +439,8 @@ db.weather.aggregate(
   [
     {
       $match: {
-        "month": { $in: [1, 2, 12] }
+        "month": { $in: [1, 2, 12] },
+        "code": { $in: [ "SN" ] }
       }
     },
     {
@@ -437,10 +450,10 @@ db.weather.aggregate(
           month: "$month",
           day: "$day"
         },
-        lessThan0: { 
+        LT0: { 
           $cond: [ { $lt: ["$temperature", 0 ] }, 1, 0]
         },
-        moreThan0: { 
+        MT0: { 
           $cond: [ { $gt: [ "$temperature", 0 ] }, 1, 0]
         }
       }
@@ -448,15 +461,15 @@ db.weather.aggregate(
     {
       $group: {
           _id: "$_id.year",
-          countLessThan0: { $sum: "$lessThan0" },
-          countMoreThan0: { $sum: "$moreThan0" }
+          countLT0: { $sum: "$LT0" },
+          countMT0: { $sum: "$MT0" }
       }
     },
     {
       $project: 
       {
         _id: "$_id", 
-        temperature_sub: { $subtract: ["$countLessThan0", "$countMoreThan0"] }
+        temperature_sub: { $subtract: ["$countLT0", "$countMT0"] }
       }
     }
   ]
