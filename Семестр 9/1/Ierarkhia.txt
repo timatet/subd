@@ -1,0 +1,5 @@
+https://docs.microsoft.com/ru-ru/sql/relational-databases/hierarchical-data-sql-server?view=sql-server-ver16
+https://docs.microsoft.com/ru-ru/sql/relational-databases/tables/tutorial-using-the-hierarchyid-data-type?view=sql-server-ver16
+https://habr.com/ru/post/27774/
+http://www.spbdev.biz/blog/obzor-i-primery-tipov-dannyh-sql-server-hierarchyid
+https://sql-ex.ru/blogs/?/Ispolzovanie_HierarchyID_v_SQL_Server_na_prostyh_primerah.html

@@ -1,0 +1,228 @@
+USE [Имя базы]
+GO
+CREATE USER [Владимир Ленский] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
+CREATE USER [Евгений Онегин] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
+CREATE USER [Ольга Ларина] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
+CREATE USER [Татьяна Ларина] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
+CREATE ROLE [продавцы]
+ALTER ROLE [продавцы] ADD MEMBER [Владимир Ленский]
+ALTER ROLE [продавцы] ADD MEMBER [Евгений Онегин]
+ALTER ROLE [продавцы] ADD MEMBER [Ольга Ларина]
+ALTER ROLE [продавцы] ADD MEMBER [Татьяна Ларина]
+CREATE VIEW [dbo].[Мои продажи]
+AS
+SELECT        dbo.Заказы.*
+FROM            dbo.Заказы
+WHERE        (Продавец = CURRENT_USER)
+GO
+
+grant select on [dbo].[Мои продажи] to Продавцы
+
+execute as user = 'Евгений Онегин'
+print current_user
+select * from [dbo].[Мои продажи]
+revert
+
+execute as user = N'Татьяна Ларина'
+print current_user
+select * from [dbo].[Мои продажи]
+revert
+
+--RLS
+--1 Права на Select
+grant select on [dbo].[Заказы] to Продавцы
+
+execute as user = 'Евгений Онегин'
+print current_user
+select * from [dbo].[Заказы]
+revert
+
+--2 Предикат безопасности
+create schema Security
+
+create function Security.fn_заказы_read(@Продавец as nvarchar(20))
+returns table
+with schemabinding
+as
+return select 1 as fn_result
+		where @Продавец=current_user
+
+--3 Создание политики безопасности
+create security policy Security.P_rls_заказы_read
+add filter predicate Security.fn_заказы_read(Продавец)
+on [dbo].[Заказы]
+with (state=on)
+--просмотр политики через системные представления
+select * from vlasovaTest.sys.security_policies
+select * from vlasovaTest.sys.security_predicates
+-- проверка
+execute as user = N'Ольга Ларина'
+print current_user
+select * from [dbo].[Заказы]
+revert
+execute as user = N'Татьяна Ларина'
+print current_user
+select * from [dbo].[Заказы]
+revert
+--ослабление безопасности проверка, что есть еще строки(инъекция)
+execute as user = N'Евгений Онегин'
+select * from [dbo].[Заказы]
+where case 
+	when Продавец = N'Владимир Ленский' --вымышленный столбец
+	then 1/0							--вызов ошибки				
+	end = 999
+revert
+-- т.е. есть продавец с таким именем, можно вытащить и 
+--другую информацию о товаре и ценах
+execute as user = N'Евгений Онегин'
+
+select * from [dbo].[Заказы]
+where case 
+	when Продавец = N'Ольга Власова'
+	then 1/0
+	end =999
+revert
+--более сложные предикаты
+create function Security.fn_заказыData_read(@Продавец as nvarchar(20),@дата Date)
+returns table
+with schemabinding
+as
+return select 1 as fn_result
+		where @Продавец=current_user and
+		DATEDIFF(day,@дата, getdate())<4
+-- для таблицы только 1 предикат
+alter security policy Security.P_rls_заказы_read
+with (state=off)
+-- при отключении политики защита снимается
+execute as user = N'Татьяна Ларина'
+print current_user
+select * from [dbo].[Заказы]
+revert
+
+create security policy Security.P_rls_заказынадату_read
+add filter predicate Security.fn_заказыData_read(Продавец,[дата оформления])
+on [dbo].[Заказы]
+with (state=on)
+
+--связь двух таблиц в фильтре(иерархия)(показывать свои продажи и продажи подчиненных)
+select * from Продавцы
+
+create function Security.fn_заказыподчиненных_read(@Продавец as nvarchar(20))
+returns table
+with schemabinding
+as
+return select 1 as fn_result
+		where exists(
+		select п1.имя,п2.имя from dbo.продавцы п1 inner join dbo.продавцы п2
+		on п2.руководитель.IsDescendantOf(п1.руководитель)=1
+		where п1.имя = current_user and п2.имя =@Продавец
+		)
+
+		execute as user = N'Евгений Онегин'
+
+select * from [dbo].[Заказы]
+
+revert
+alter security policy Security.P_rls_заказынадату_read
+with (state=off)
+create security policy Security.P_rls_заказыПодчиненных_read
+add filter predicate Security.fn_заказыподчиненных_read(Продавец)
+on [dbo].[Заказы]
+with (state=on)
+
+execute as user = N'Евгений Онегин'
+
+select * from [dbo].[Заказы]
+
+revert
+execute as user = N'Владимир Ленский'
+
+select * from [dbo].[Заказы]
+
+revert
+execute as user = N'татьяна Ларина'
+
+select * from [dbo].[Заказы]
+
+revert
+-- план запроса
+--политика на 2 таблицы, переключения между политиками
+grant select on Продавцы to продавцы
+alter security policy Security.P_rls_заказыПодчиненных_read
+with (state=off)
+
+create security policy Security.P_rls_Режим1_read
+add filter predicate Security.fn_заказыподчиненных_read(Продавец)
+on [dbo].[Заказы],
+add filter predicate Security.fn_заказы_read(Имя)
+on [dbo].[Продавцы]
+with (state=on)
+
+execute as user = N'Владимир Ленский'
+
+select * from [dbo].[Заказы]
+select * from [dbo].[Продавцы]
+
+revert
+alter security policy Security.P_rls_Режим1_read
+with (state=off)
+
+create security policy Security.P_rls_Режим2_read
+add filter predicate Security.fn_заказыподчиненных_read(Продавец)
+on [dbo].[Заказы],
+add filter predicate Security.fn_заказыподчиненных_read(Имя)
+on [dbo].[Продавцы]
+with (state=off)
+
+--удаление, вставка, обновление
+grant delete, insert, update on заказы to продавцы
+execute as user = N'Владимир Ленский'
+delete from заказы where номер=5 -- свой 1 - да; 2 нет, 5 подчиненный
+revert
+
+execute as user = N'Владимир Ленский'
+insert into dbo.заказы
+values(getdate(),'Евгений Онегин','test',2,20) --добавлен
+
+revert
+execute as user = N'Владимир Ленский'
+select * from dbo.заказы
+revert
+
+execute as user = N'Евгений Онегин'
+select * from dbo.заказы
+revert
+
+--обновление со сменой продавца
+execute as user = N'Владимир Ленский'
+Update заказы
+set Количество = количество +1 
+revert
+
+execute as user = N'Владимир Ленский'
+Update заказы
+set продавец = N'Евгений Онегин'
+where номер=1
+select * from dbo.заказы
+revert
+
+-- предикат блокировки
+Create security policy security.P_dbo_Режим3_write
+add filter predicate security.fn_заказы_read(Продавец)
+	on [dbo].[Заказы],
+	add block predicate security.fn_заказы_read(Продавец)
+	on [dbo].[Заказы] after insert
+	with (state = on)
+
+execute as user = N'Владимир Ленский'
+insert into dbo.заказы
+values(getdate(),'Евгений Онегин','test',2,20) --добавлен
+
+revert
+execute as user = N'Владимир Ленский'
+insert into dbo.заказы
+values(getdate(),'Владимир Ленский','test',2,20) --добавлен
+revert
+execute as user = N'Владимир Ленский'
+select * from  dbo.заказы
+revert
