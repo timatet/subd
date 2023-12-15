@@ -6,7 +6,7 @@ CREATE TABLE clients (
 	birth_date date NULL,
 	address nvarchar(128) NULL,
 	PRIMARY KEY (phone)
-) AS NODE
+) AS NODE;
 
 -- Заполнение данными
 INSERT INTO clients
@@ -22,30 +22,30 @@ VALUES
 	(N'79151236463',N'Орлова А. Ф.',		7, '1984-06-06',N'Тутаев, Ленина, 10'),
 	(N'79151236464',N'Калинин А. Д.',		0, '1999-10-09',N'Углич, Февральская, 28'),
 	(N'79151236465',N'Титова П. М.',		0, '1987-06-12',N'Углич, Ленина, 22'),
-	(N'79151236466',N'Колесников Я. П.',	0, '1994-03-08',N'Дубки, Гагарина, 3'),
+	(N'79151236466',N'Колесников Я. П.',		0, '1994-03-08',N'Дубки, Гагарина, 3'),
 	(N'79159321596',N'Бондарева А. В.',		0, '1989-01-01',N'Ярославль, Папанина, 7'),
 	(N'79159452658',N'Орлова А. Е.',		0, '1998-07-18',N'Нерехта, Седова, 5'),
 	(N'79159632154',N'Иванов Р. Р.',		0, '2001-12-09',N'Мышкин, Павлова, 10'),
 	(N'79159700452',N'Архипова А. М.',		0, '1999-08-03',N'Рыбинск, Луначарского, 99'),
 	(N'79159836482',N'Блинова П. А.',		5, '1986-01-12',N'Гаврилов Ям, Клубная, 32'),
-	(N'79159842562',N'Третьякова М. Ф.',	0, '1999-03-07',N'Ростов, Моравского, 18'),
+	(N'79159842562',N'Третьякова М. Ф.',		0, '1999-03-07',N'Ростов, Моравского, 18'),
 	(N'79185263265',N'Семенов С. И.',		30,'1996-04-09',N'Ярославль, 8 марта, 10'),
 	(N'79187452525',N'Некрасова А. Д.',		0, '2001-09-04',N'Некрасово, Центральная, 4'),
-	(N'79189526452',N'Покровская А. А.',	10,'2002-01-12',N'Переславль Залесский, Светлая, 5'),
+	(N'79189526452',N'Покровская А. А.',		10,'2002-01-12',N'Переславль Залесский, Светлая, 5'),
 	(N'79301274586',N'Малышев Д. М.',		4, '1999-01-06',N'Рыбинск, Пушкина, 4'),
-	(N'79401253265',N'Островский Д. Н.',	0, '1975-06-15',N'Ярославль, Углическая, 56'),
+	(N'79401253265',N'Островский Д. Н.',		0, '1975-06-15',N'Ярославль, Углическая, 56'),
 	(N'79652635325',N'Назарова В. И.',		0, '1994-07-06',N'Гаврилов Ям, Попова, 17'),
 	(N'79653215124',N'Голубева В. Б.',		5, '1998-01-20',N'Рыбинск, Ленина, 17'),
 	(N'79653265986',N'Филиппов А. Д.',		0, '1955-11-09',N'Рыбинск, Бульварная, 7'),
 	(N'79655175553',N'Тарасова А. Т.',		18,'1945-09-01',N'Углич, Нахимсона, 3'),
 	(N'79801256598',N'Марков А. Д.',		0, '1968-03-10',N'Ярославль, Маланова, 14'),
-	(N'79802563256',N'Шапошникова М. Ф.',	5, '2002-12-02',N'Ростов, Спартаковская, 1'),
+	(N'79802563256',N'Шапошникова М. Ф.',		5, '2002-12-02',N'Ростов, Спартаковская, 1'),
 	(N'79803258456',N'Орлов А. А.',			15,'1973-08-16',N'Рыбинск, Свободы, 5'),
 	(N'79803265984',N'Панов А. Т.',			8, '1988-08-11',N'Ярославль, 1-ая Новодуховская,1'),
 	(N'79804521258',N'Казакова Д. Д.',		0, '1985-09-03',N'Ярославль, пр-т Ленина, 104'),
-	(N'79804523265',N'Сорокина В. К.',		0, '2001-09-19',N'Ростов, Карла Маркса, 73')
+	(N'79804523265',N'Сорокина В. К.',		0, '2001-09-19',N'Ростов, Карла Маркса, 73');
 
-SELECT * FROM clients c 
+SELECT * FROM clients c;
 	 
 -- Создание узла "Туры"
 CREATE TABLE tours (
@@ -61,30 +61,30 @@ CREATE TABLE tours (
 		OR [food_type]='BB' 
 		OR [food_type]='RO'),
 	PRIMARY KEY(id)
-) AS NODE
+) AS NODE;
 
 -- Заполнение данными
 INSERT INTO tours 
 	(name,cost,food_type,duration) 
 VALUES
-	(N'Пешком по золотому кольцу',	5200.00,	N'RO',	10),	--1
-	(N'Каналы Санкт-Петербурга',	9800.00,	N'AI',	7),		--2
-	(N'Золотая осень',				2500.00,	N'UAI',	3),		--3
+	(N'Пешком по золотому кольцу',		5200.00,	N'RO',	10),	--1
+	(N'Каналы Санкт-Петербурга',		9800.00,	N'AI',	7),	--2
+	(N'Золотая осень',			2500.00,	N'UAI',	3),	--3
 	(N'Тур в Самарканд',			16800.00,	N'FB',	12),	--4
-	(N'7 дней в Фетхие',			56000.00,	N'AI',	7),		--5
+	(N'7 дней в Фетхие',			56000.00,	N'AI',	7),	--5
 	(N'Ликийская тропа',			27000.00,	N'RO',	14),	--6
-	(N'Новый год в Анапе',			18200.00,	N'FB',	5),		--7
+	(N'Новый год в Анапе',			18200.00,	N'FB',	5),	--7
 	(N'Шавлинские озера',			11000.00,	N'RO',	21),	--8
 	(N'Восхождение на Олимп',		50000.00,	N'UAI',	35),	--9
-	(N'Поход в Ергаки',				14300.00,	N'RO',	7),		--10
-	(N'Неделя на Таганае',			16000.00,	N'RO',	7),		--11
+	(N'Поход в Ергаки',			14300.00,	N'RO',	7),	--10
+	(N'Неделя на Таганае',			16000.00,	N'RO',	7),	--11
 	(N'Велопоход на Кольский',		37000.00,	N'FB',	21),	--12
 	(N'Рождество в Нюрнберге',		45000.00,	N'UAI',	10),	--13
-	(N'Горнолыжный тур Германия',	95110.00,	N'HB',	7),		--14
-	(N'Зимний Таганай',				31000.00,	N'FB',	12),	--15
-	(N'На коньках по Байкалу',		18100.00,	N'RO',	15)		--16
+	(N'Горнолыжный тур Германия',		95110.00,	N'HB',	7),	--14
+	(N'Зимний Таганай',			31000.00,	N'FB',	12),	--15
+	(N'На коньках по Байкалу',		18100.00,	N'RO',	15);	--16
 
-SELECT * FROM tours t 
+SELECT * FROM tours t;
 
 -- Создание ребра "Контракт"
 -- Стоимость тура фиксируется, поскольку в исходном туре она может изменяться
@@ -95,7 +95,7 @@ CREATE TABLE contracts (
 	doc_number char(16) NOT NULL,
 	tour_cost decimal(10,2) DEFAULT 0 NULL,
 	PRIMARY KEY(id)
-) AS EDGE
+) AS EDGE;
 
 -- Заполнение данными
 INSERT INTO contracts 
@@ -192,9 +192,9 @@ VALUES
 	(	(SELECT $node_id FROM clients c WHERE c.phone = '79803258456'), --23
 		(SELECT $node_id FROM tours   t WHERE t.id = 1),
 		'2022-12-02','2022-12-30',N'7629559531', 
-		(100.00 - (SELECT c.personal_sale FROM clients c WHERE c.phone = '79151236463')) / 100.00 * 5200.00)
+		(100.00 - (SELECT c.personal_sale FROM clients c WHERE c.phone = '79151236463')) / 100.00 * 5200.00);
 
-SELECT * FROM contracts c 
+SELECT * FROM contracts c;
 
 -- Запрос
 -- Среди клиентов, пользовавшихся услугами фирмы более 2-х раз, найти самых «дорогих» 
@@ -209,7 +209,7 @@ SELECT clientName, toursSum FROM (
 	GROUP BY cl.phone, cl.name
 	HAVING COUNT(*) >= 2
 ) AS tbl
-WHERE rnkByCostSum = 1
+WHERE rnkByCostSum = 1;
 
 -- Создаем узел "Локация"
 CREATE TABLE location (
@@ -217,45 +217,45 @@ CREATE TABLE location (
 	country_name nvarchar(32) NOT NULL,
 	state_name nvarchar(32) NOT NULL,
 	PRIMARY KEY(id)
-) AS NODE
+) AS NODE;
 
 -- Заполнение данными
 INSERT INTO location
 	(country_name,state_name)
 VALUES
-	(N'Россия', 	N'Анапа'),			--1
-	(N'Россия', 	N'Абакан'),			--2
+	(N'Россия', 	N'Анапа'),		--1
+	(N'Россия', 	N'Абакан'),		--2
 	(N'Россия', 	N'Минусинк'),		--3
-	(N'Россия', 	N'Никель'),			--4
+	(N'Россия', 	N'Никель'),		--4
 	(N'Россия', 	N'Мурманск'),		--5
 	(N'Россия', 	N'Екатеринбург'),	--6
 	(N'Россия', 	N'Златоуст'),		--7
 	(N'Россия', 	N'Шушенское'),		--8	
 	(N'Россия', 	N'Горно-Алтайск'),	--9
 	(N'Россия', 	N'Ярославль'),		--10
-	(N'Россия', 	N'Москва'),			--11
-	(N'Россия', 	N'Санкт-Петербург'),--12
-	(N'Россия', 	N'Плес'),			--13
+	(N'Россия', 	N'Москва'),		--11
+	(N'Россия', 	N'Санкт-Петербург'),	--12
+	(N'Россия', 	N'Плес'),		--13
 	(N'Россия', 	N'Иркутск'),		--14
-	(N'Казахстан', 	N'Астана'),			--15
+	(N'Казахстан', 	N'Астана'),		--15
 	(N'Казахстан', 	N'Павлодар'),		--16
 	(N'Казахстан', 	N'Караганда'),		--17
 	(N'Узбекистан', N'Ташкент'),		--18
 	(N'Узбекистан', N'Самарканд'),		--19
 	(N'Турция', 	N'Стамбул'),		--20
-	(N'Турция', 	N'Анкара'),			--21
+	(N'Турция', 	N'Анкара'),		--21
 	(N'Турция', 	N'Анталья'),		--22
-	(N'Турция', 	N'Фетхие'),			--23
+	(N'Турция', 	N'Фетхие'),		--23
 	(N'Греция', 	N'Салоники'),		--24
 	(N'Греция', 	N'Катерини'),		--25
-	(N'Греция', 	N'Лариса'),			--26
-	(N'Германия', 	N'Бонн'),			--27
+	(N'Греция', 	N'Лариса'),		--26
+	(N'Германия', 	N'Бонн'),		--27
 	(N'Германия', 	N'Нюрнберг'),		--27
 	(N'Германия', 	N'Патрикен-Кирхе'),	--28
-	(N'Германия', 	N'Мюнхен'),			--29
-	(N'Германия', 	N'Троисдорф')		--30
+	(N'Германия', 	N'Мюнхен'),		--29
+	(N'Германия', 	N'Троисдорф');		--30
 
-SELECT * FROM location l 	
+SELECT * FROM location l;
 
 -- Создаем ребро "Проживает"
 CREATE TABLE lodging (
@@ -263,7 +263,7 @@ CREATE TABLE lodging (
 	hotel_stars_count int NULL,
 	hotel_booking_site nvarchar(128) NULL,
 	hotel_booking_cost decimal(10,2) DEFAULT 0 NULL
-) AS EDGE
+) AS EDGE;
 
 -- Заполнение данными
 INSERT INTO lodging 
@@ -271,11 +271,11 @@ INSERT INTO lodging
 VALUES
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 1),
 		(SELECT $node_id FROM location	l WHERE l.id = 10),
-		5,N'SK Рояль',	 					NULL,3500.00
+		5,N'SK Рояль',	 				NULL,3500.00
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 2),
 		(SELECT $node_id FROM location	l WHERE l.id = 12),
-		4,N'Хостел Друзья',					NULL,2150.00
+		4,N'Хостел Друзья',				NULL,2150.00
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 3),
 		(SELECT $node_id FROM location	l WHERE l.id = 13),
@@ -283,11 +283,11 @@ VALUES
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 4),
 		(SELECT $node_id FROM location	l WHERE l.id = 19),
-		5,N'Отель Nippon',					NULL,6700.00
+		5,N'Отель Nippon',				NULL,6700.00
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 5),
 		(SELECT $node_id FROM location	l WHERE l.id = 23),
-		5,N'Отель Литуния',					NULL,9100.00
+		5,N'Отель Литуния',				NULL,9100.00
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 6),
 		(SELECT $node_id FROM location	l WHERE l.id = 20),
@@ -319,11 +319,11 @@ VALUES
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 13),
 		(SELECT $node_id FROM location	l WHERE l.id = 4),
-		5,'Отель Leonardo',					NULL,6900.00
+		5,'Отель Leonardo',				NULL,6900.00
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 14),
 		(SELECT $node_id FROM location	l WHERE l.id = 28),
-		5,N'Шале Альпы',					NULL,15000.00
+		5,N'Шале Альпы',				NULL,15000.00
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 15),
 		(SELECT $node_id FROM location	l WHERE l.id = 7),
@@ -331,10 +331,10 @@ VALUES
 	),
 	(	(SELECT $node_id FROM tours   	t WHERE t.id = 16),
 		(SELECT $node_id FROM location	l WHERE l.id = 14),
-		5,N'Хостел Харбор',					NULL,1100.00
-	)
+		5,N'Хостел Харбор',				NULL,1100.00
+	);
 	
-SELECT * FROM lodging l 
+SELECT * FROM lodging l;
 
 -- Запрос
 -- Найти регион, в который предлагается наибольшее кол-во туров
@@ -348,7 +348,7 @@ SELECT countryName, stateName, toursCount FROM (
 	WHERE MATCH(tr-(ld)->lc)
 	GROUP BY lc.country_name, lc.state_name
 ) tbl
-WHERE rnkByTourInRegionCount = 1
+WHERE rnkByTourInRegionCount = 1;
 
 -- Запрос
 -- Выдать список туров, для которых нет 5-звездочных отелей
@@ -361,7 +361,7 @@ SELECT tourName FROM (
 	WHERE MATCH(tr-(ld)->lc)
 	GROUP BY tr.id, tr.name
 ) tbl
-WHERE maxStarsInTour < 5
+WHERE maxStarsInTour < 5;
 
 -- Найти наиболее и наименее популярные туры
 WITH CTE AS (
@@ -392,7 +392,7 @@ SELECT tourType,name,countContracts FROM (
 	FROM CTE
 	GROUP BY CTE.name
 ) tblM
-WHERE rnkM = 1
+WHERE rnkM = 1;
 
 -- Найти регион, принесший фирме наибольшую выручку с начала текущего года
 SELECT countryName,stateName,sumCostInRegion FROM (
@@ -405,4 +405,53 @@ SELECT countryName,stateName,sumCostInRegion FROM (
 	WHERE MATCH(cl-(ct)->tr-(ld)->lc)
 	GROUP BY lc.country_name, lc.state_name 
 ) tbl
-WHERE rnkByCost = 1
+WHERE rnkByCost = 1;
+
+-- Создаем узел "Страховой агент"
+CREATE TABLE insurance_agents (
+	INN char(12) NOT NULL,
+	agent_name nvarchar(32) NOT NULL,
+	PRIMARY KEY (INN)
+) AS NODE;
+
+-- Заполнение данными
+INSERT INTO insurance_agents 
+	(INN,agent_name) 
+VALUES
+	(N'123001',N'Альфа-Страхование'),
+	(N'123002',N'Тинькофф-Страхование'),
+	(N'123003',N'Сбер-Страхование');
+
+-- Создаем ребро "Страховка"
+CREATE TABLE insurance (
+	contract_id int IDENTITY(1,1) NOT NULL,
+	coverage_amount decimal(10,2) NULL,
+	conclusion_date date NULL,
+	insurance_period int NULL,
+	premium decimal(10,2) DEFAULT 0 NULL,
+	insurance_type nvarchar(32) NOT NULL,
+	PRIMARY KEY (contract_id)
+) AS EDGE;
+
+INSERT INTO insurance 
+	($from_id, $to_id, coverage_amount,conclusion_date,insurance_period,premium,insurance_type) 
+VALUES
+	 (	(SELECT $node_id FROM clients c			WHERE c.phone = '79151236460'), --1
+		(SELECT $node_id FROM insurance_agents ia	WHERE ia.INN  = '123001'),		--Альфа
+		100000.00,'2021-08-11',14,2500.00,N'Медицина'
+	),
+	(	(SELECT $node_id FROM clients c			WHERE c.phone = '79151236466'), --2
+		(SELECT $node_id FROM insurance_agents ia	WHERE ia.INN  = '123001'),		--Альфа
+		25000.00,'2022-04-05',100,500.00,N'Багаж'
+	),
+	(	(SELECT $node_id FROM clients c			WHERE c.phone = '79151236463'), --3
+		(SELECT $node_id FROM insurance_agents ia	WHERE ia.INN  = '123002'),		--Тинь
+		75000.00,'2022-06-01',14,3500.00,N'Медицина'
+	),
+	(	
+		(SELECT $node_id FROM clients c			WHERE c.phone = '79803258456'),	--4
+		(SELECT $node_id FROM insurance_agents ia	WHERE ia.INN  = '123003'),		--Сбер
+		50000.00,'2022-09-30',90,6500.30,N'Билеты'
+	);
+
+SELECT * FROM insurance;
