@@ -395,9 +395,14 @@ SELECT tourType,name,countContracts FROM (
 WHERE rnkM = 1
 
 -- Найти регион, принесший фирме наибольшую выручку с начала текущего года
--- ?
-
-
-
-
-	
+SELECT countryName,stateName,sumCostInRegion FROM (
+	SELECT 
+		lc.country_name countryName, 
+		lc.state_name stateName, 
+		RANK() OVER(ORDER BY SUM(ct.tour_cost) DESC) rnkByCost, 
+		SUM(ct.tour_cost) sumCostInRegion
+	FROM clients cl, contracts ct, tours tr, lodging ld, location lc
+	WHERE MATCH(cl-(ct)->tr-(ld)->lc)
+	GROUP BY lc.country_name, lc.state_name 
+) tbl
+WHERE rnkByCost = 1
