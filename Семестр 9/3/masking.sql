@@ -1,4 +1,7 @@
-USE mask_home
+CREATE DATABASE mask_home;
+CREATE DATABASE mask_test;
+
+USE mask_home;
 CREATE TABLE Masking (
 	Word NVARCHAR(50),
 	InfType NVARCHAR(50),
@@ -25,7 +28,7 @@ CREATE TABLE UserData(
 	[код] int
 )
 
-USE mask_home
+USE mask_test
 INSERT INTO UserData 
 values
 	('t.teterin@uniyar.ac.ru', 101, 'Timofey', 'P@$$W0!D', '12343210', 123);
@@ -83,9 +86,9 @@ BEGIN
 				FROM '+@DBName+'.[dbo].['+ @TableName + ']'
 			EXEC sp_executesql 
 				@Sql, 
-				N'@min AS int output, @max as int output', 
-				@min = @min output, 
-				@max = @max output;
+				N'@min AS INT OUTPUT, @max AS INT OUTPUT', 
+				@min = @min OUTPUT, 
+				@max = @max OUTPUT;
 			SET @Sql = '
 				ALTER TABLE '+@DBname+'.[dbo].['+@TableName+'] 
 				ALTER COLUMN ['+@ColumnName+'] 
@@ -100,6 +103,7 @@ BEGIN
 	DROP TABLE IF EXISTS #tmpTable
 END 
 
+USE mask_home
 EXEC MaskingProcedure 'mask_test'
 
 CREATE USER TestUser WITHOUT LOGIN
