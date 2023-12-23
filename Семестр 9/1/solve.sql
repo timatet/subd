@@ -10,9 +10,12 @@ CREATE TABLE Clearence
 );
 INSERT INTO Clearence
 VALUES
-	(0, 'TOP SECRET'),
-	(1, 'SECRET'),
-	(2, 'UNCLASSIFIED');
+	(0, 'TopSecret'),
+	(1, 'Secret'),
+	(2, 'Unclassified');
+CREATE ROLE [TopSecret];
+CREATE ROLE [Secret];
+CREATE ROLE [Unclassified];
 
 -- Данные
 CREATE TABLE TestData
@@ -24,40 +27,13 @@ CREATE TABLE TestData
 );
 INSERT INTO TestData
 VALUES 
-	(N'Ivan Ivanov', 'SECRET'),
-	(N'Peter Petrov', 'TOP SECRET'),
-	(N'Michael Sidorov', 'UNCLASSIFIED');
-
--- Настройки пользователей
-CREATE TABLE UserData
-(
-	name NVARCHAR(50) NOT NULL PRIMARY KEY,
-	clearence NVARCHAR(50) NOT NULL
-	FOREIGN KEY(clearence) REFERENCES Clearence(name)
-);
-
-INSERT INTO UserData
-VALUES
-	(N'dbo', 'TOP SECRET');
-
--- Триггер на добавление новых пользователей в UserData
-CREATE OR ALTER TRIGGER UserRegisterTrigger
-    ON DATABASE
-    AFTER CREATE_USER
-    AS
-BEGIN
-    DECLARE @NewUser NVARCHAR(2000) = 
-    	EVENTDATA().value('(/EVENT_INSTANCE/ObjectName)[1]', 'NVARCHAR(256)')
-    INSERT INTO UserData
-    VALUES 
-    	(@NewUser, 'UNCLASSIFIED') 
-END;
-
-DELETE FROM UserData
-SELECT * FROM UserData
+	(N'Ivan Ivanov', 'Secret'),
+	(N'Peter Petrov', 'TopSecret'),
+	(N'Michael Sidorov', 'Unclassified');
 
 DROP USER IF EXISTS [Anna]
 DROP USER IF EXISTS [Alex]
+DROP USER IF EXISTS [Ivan]
 
 CREATE ROLE [data_reader]
 GRANT SELECT ON TestData TO [data_reader]
@@ -66,26 +42,61 @@ GRANT INSERT ON TestData TO [data_reader]
 
 CREATE USER [Anna] WITHOUT LOGIN
 ALTER ROLE [data_reader] ADD MEMBER [Anna]
+ALTER ROLE [Unclassified] ADD MEMBER [Anna]
 
 CREATE USER [Alex] WITHOUT LOGIN
 ALTER ROLE [data_reader] ADD MEMBER [Alex]
+ALTER ROLE [Secret] ADD MEMBER [Alex]
 
-UPDATE UserData
-SET clearence = 'SECRET'
-WHERE name = 'Alex'
+CREATE USER [Ivan] WITHOUT LOGIN 
+ALTER ROLE [data_reader] ADD MEMBER [Ivan]
+ALTER ROLE [TopSecret] ADD MEMBER [Ivan]
+ALTER ROLE [Unclassified] ADD MEMBER [Ivan]
 
-SELECT * FROM UserData
+-- Роли пользователи
+SELECT m.name, p.name 
+FROM sys.database_role_members rm
+JOIN sys.database_principals p
+	ON rm.role_principal_id = p.principal_id
+JOIN sys.database_principals m
+	ON rm.member_principal_id = m.principal_id
 
--- Уровень пользователя
-SELECT cl.level FROM UserData ud, Clearence cl WHERE ud.clearence = cl.name AND ud.name = 'Alex'
+-- Максимально приоритетная роль пользователя
+CREATE OR ALTER FUNCTION 
+	[UserSec].[user_max_role_level]()
+RETURNS INT
+WITH schemabinding
+BEGIN
+	DECLARE 
+		@CL_level INT, 
+		@CL_name NVARCHAR(50),
+		@CL_max_level INT = 999;
+	DECLARE SearchUserMaxRoleLevelCursor CURSOR
+	FOR (SELECT cl.level, cl.name FROM dbo.Clearence cl)
+	OPEN SearchUserMaxRoleLevelCursor;
+	FETCH NEXT FROM SearchUserMaxRoleLevelCursor 
+	INTO @CL_level,@CL_name;
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		IF (IS_ROLEMEMBER(@CL_name)=1 OR CURRENT_USER='dbo')
+		BEGIN
+			SET @CL_max_level = LEAST(@CL_max_level, @CL_level);
+		END
+		FETCH NEXT FROM SearchUserMaxRoleLevelCursor
+		INTO @CL_level,@CL_name;
+	END;
+	CLOSE SearchUserMaxRoleLevelCursor;
+	DEALLOCATE SearchUserMaxRoleLevelCursor;
+	RETURN @CL_max_level;
+END;
 
--- Уровень секрета
-SELECT cl.level FROM Clearence cl WHERE cl.name = 'SECRET'
+SELECT UserSec.user_max_role_level();
 
 CREATE SCHEMA UserSec
 
 -- Предикат управления доступом
-CREATE OR ALTER FUNCTION [UserSec].[data_reader_control](@clearence AS NVARCHAR(20))
+CREATE OR ALTER FUNCTION 
+	[UserSec].[data_reader_control](@clearence AS NVARCHAR(20))
 RETURNS TABLE
 WITH schemabinding
 AS
@@ -95,13 +106,9 @@ RETURN
     	SELECT cl.level 
     	FROM dbo.Clearence cl 
     	WHERE cl.name = @clearence
-	) >= (
-		SELECT cl.level 
-		FROM dbo.UserData ud, dbo.Clearence cl 
-		WHERE ud.clearence = cl.name 
-		AND ud.name = CURRENT_USER
-	);
+	) >= (SELECT UserSec.user_max_role_level());
 
+DROP FUNCTION [UserSec].[user_max_role_level]
 DROP FUNCTION [UserSec].[data_reader_control]
 
 -- Политика
@@ -141,9 +148,9 @@ BEGIN
 	BEGIN
 	-- Находим уровень доступа текущего пользователя
 	DECLARE @CurrentUserClearence NVARCHAR(50) = 
-		(SELECT ud.clearence 
-		FROM dbo.UserData ud
-		WHERE ud.name = CURRENT_USER);
+		(SELECT c.name 
+		FROM dbo.Clearence c 
+		WHERE c.level = (SELECT UserSec.user_max_role_level()));
 	-- Устанавливаем данным
 	UPDATE dbo.TestData 
 	SET clearence = @CurrentUserClearence
@@ -153,15 +160,15 @@ BEGIN
 	END;
 	CLOSE UpdateDataClearanceCursor;
 	DEALLOCATE UpdateDataClearanceCursor;
-END
+END;
  
 -- Проверка
 EXECUTE AS USER = 'Anna'
 SELECT * FROM dbo.TestData
 INSERT INTO dbo.TestData 
-VALUES (N'Insert SECRET by Anna', 'SECRET')
+VALUES (N'Insert Secret by Anna', 'Secret')
 INSERT INTO dbo.TestData 
-VALUES (N'Insert UNCLASSIFIED by Anna', 'UNCLASSIFIED')
+VALUES (N'Insert Unclassified by Anna', 'Unclassified')
 REVERT
  
 EXECUTE AS USER = 'Alex'
@@ -169,6 +176,10 @@ SELECT * FROM dbo.TestData
 UPDATE dbo.TestData 
 SET name = 'Michael Sidorov 1'
 WHERE id = 3
+REVERT
+
+EXECUTE AS USER = 'Ivan'
+SELECT * FROM dbo.TestData
 REVERT
 
 SELECT * FROM dbo.TestData 
