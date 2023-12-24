@@ -2,19 +2,33 @@ CREATE DATABASE L6;
 USE L6;
 
 -- Настройки clr
-EXEC sp_configure 'show advanced options', 1;
-RECONFIGURE;
-EXEC sp_configure 'clr enabled', 1;
-RECONFIGURE;
+EXEC sp_configure 'show advanced options', 1
+RECONFIGURE
+EXEC sp_configure 'clr enabled', 1
+EXEC sp_configure 'clr strict security', 0
+RECONFIGURE
 
-ALTER DATABASE L6 SET TRUSTWORTHY ON;
+ALTER DATABASE master SET TRUSTWORTHY ON
 
 DROP FUNCTION IF EXISTS dbo.TestFunction;
 DROP ASSEMBLY IF EXISTS DotNetFunction;
 
 CREATE ASSEMBLY DotNetFunction 
-FROM '/.../CLR2.dll'
-WITH PERMISSION_SET = EXTERNAL_ACCESS;
+FROM '...\CLR2.dll'
+WITH PERMISSION_SET = SAFE;
+
+ALTER ASSEMBLY DotNetFunction
+WITH PERMISSION_SET = UNSAFE;
+
+--- Доверенные сборки ---
+SELECT * FROM sys.assembly_files
+SELECT * FROM sys.assemblies
+
+DECLARE @asmBin VARBINARY(MAX) =
+	(SELECT content FROM sys.assembly_files WHERE assembly_id=65565);
+DECLARE @hash VARBINARY(64) = HASHBYTES('SHA2_512', @asmBin);
+EXEC sp_add_trusted_assembly @hash, N'clr2, version=0.0.0.0, culture=neutral, publickeytoken=null, processorarchitecture=msil'
+--- ****************** ---
 
 CREATE OR ALTER FUNCTION dbo.TestFunction(
 	@log_file NVARCHAR(100),
@@ -50,13 +64,25 @@ BEGIN
 		= @Data.value('(/EVENT_INSTANCE/SchemaName)[1]', 'NVARCHAR(100)')
 	DECLARE @ObjectName NVARCHAR(100) 
 		= @Data.value('(/EVENT_INSTANCE/ObjectName)[1]', 'NVARCHAR(100)')
+	DECLARE @ObjectType NVARCHAR(100) 
+		= @Data.value('(/EVENT_INSTANCE/ObjectType)[1]', 'NVARCHAR(100)')
 	DECLARE @TSQLCommand NVARCHAR(MAX) 
 		= @Data.value('(/EVENT_INSTANCE/TSQLCommand/CommandText)[1]', 'NVARCHAR(MAX)')
-	-- ...
+	DECLARE @LogResult INT = (
+		SELECT dbo.TestFunction(
+			'/.../test_file.csv', 
+			GETDATE(), 
+			@LoginName, 
+			@ObjectType, 
+			CONCAT(@DBName, '.', @SchemaName, '.', @ObjectName), 
+			@TSQLCommand
+		)
+	);
 END
 
+-- Проверка триггера
 DROP PROCEDURE IF EXISTS TestAudit
 CREATE OR ALTER PROCEDURE TestAudit AS
 BEGIN
-    SELECT 'TestAudit'
+	SELECT 'TestAudit'
 END
