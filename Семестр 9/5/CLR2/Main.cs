@@ -17,7 +17,7 @@ public class LogFunctions
         {
             using (StreamWriter writer = new StreamWriter(log_file, true))
             {
-                writer.WriteLineAsync(string.Format("{0},{1},{2},{3},{4}", date.ToString("G"), user, object_type, object_name, sql));
+                writer.WriteLineAsync(string.Format("{0},{1},{2},{3},{4}", date.ToString("G"), user, object_type, object_name, sql).Replace('\n', ' '));
             }
         } catch(Exception e) {
             return e.ToString();
