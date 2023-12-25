@@ -1,6 +1,7 @@
 ﻿using Microsoft.SqlServer.Server;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 
 public class LogFunctions
 {
@@ -17,7 +18,7 @@ public class LogFunctions
         {
             using (StreamWriter writer = new StreamWriter(log_file, true))
             {
-                writer.WriteLineAsync(string.Format("{0},{1},{2},{3},{4}", date.ToString("G"), user, object_type, object_name, sql).Replace('\n', ' '));
+                writer.WriteLineAsync(Regex.Replace(string.Format("{0},{1},{2},{3},{4}", date.ToString("G"), user, object_type, object_name, sql), @"\t|\n|\r", ""));
             }
         } catch(Exception e) {
             return e.ToString();
