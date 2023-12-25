@@ -10,11 +10,12 @@ RECONFIGURE
 
 ALTER DATABASE master SET TRUSTWORTHY ON
 
-DROP FUNCTION IF EXISTS dbo.TestFunction;
+DROP TRIGGER IF EXISTS audit_objects ON DATABASE;
+DROP FUNCTION IF EXISTS TestFunction;
 DROP ASSEMBLY IF EXISTS DotNetFunction;
 
 CREATE ASSEMBLY DotNetFunction 
-FROM '...\CLR2.dll'
+FROM 'D:\repos\subd\Семестр 9\5\CLR2\bin\Release\CLR2.dll'
 WITH PERMISSION_SET = SAFE;
 
 ALTER ASSEMBLY DotNetFunction
@@ -32,7 +33,7 @@ EXEC sp_add_trusted_assembly @hash, N'clr2, version=0.0.0.0, culture=neutral, pu
 
 CREATE OR ALTER FUNCTION dbo.TestFunction(
 	@log_file NVARCHAR(100),
-	@date DATE, 
+	@date NVARCHAR(50), 
 	@user NVARCHAR(50), 
 	@object_type NVARCHAR(50), 
 	@object_name NVARCHAR(50), 
@@ -41,7 +42,7 @@ CREATE OR ALTER FUNCTION dbo.TestFunction(
 AS EXTERNAL NAME DotNetFunction.LogFunctions.LogActionInFile;
 
 -- Проверка
-SELECT dbo.TestFunction('/.../test_file.csv', GETDATE(), 'test_user', 'obj_t_test', 'obj_n_test', 'sql_test');
+SELECT dbo.TestFunction('D:\test_file.csv', GETDATE(), 'test_user', 'obj_t_test', 'obj_n_test', 'sql_test');
 
 -- Аудит действий над функциями и процедурами
 CREATE OR ALTER TRIGGER audit_objects
@@ -70,7 +71,7 @@ BEGIN
 		= @Data.value('(/EVENT_INSTANCE/TSQLCommand/CommandText)[1]', 'NVARCHAR(MAX)')
 	DECLARE @LogResult INT = (
 		SELECT dbo.TestFunction(
-			'/.../test_file.csv', 
+			'D:/test_file.csv', 
 			GETDATE(), 
 			@LoginName, 
 			@ObjectType, 
@@ -78,11 +79,14 @@ BEGIN
 			@TSQLCommand
 		)
 	);
-END
+END;
+
+SELECT GETDATE();
 
 -- Проверка триггера
-DROP PROCEDURE IF EXISTS TestAudit
+DROP PROCEDURE IF EXISTS TestAudit;
+
 CREATE OR ALTER PROCEDURE TestAudit AS
 BEGIN
 	SELECT 'TestAudit'
-END
+END;

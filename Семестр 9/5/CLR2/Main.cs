@@ -8,7 +8,7 @@ public class LogFunctions
     [SqlFunction(FillRowMethodName = "LogInFile")]
     public static string LogActionInFile(
         string log_file,
-        DateTime date, 
+        string date, 
         string user, 
         string object_type, 
         string object_name, 
@@ -18,7 +18,7 @@ public class LogFunctions
         {
             using (StreamWriter writer = new StreamWriter(log_file, true))
             {
-                writer.WriteLineAsync(Regex.Replace(string.Format("{0},{1},{2},{3},{4}", date.ToString("G"), user, object_type, object_name, sql), @"\t|\n|\r", ""));
+                writer.WriteLineAsync(Regex.Replace(string.Format("{0},{1},{2},{3},{4}", date, user, object_type, object_name, sql), @"\t|\n|\r", " "));
             }
         } catch(Exception e) {
             return e.ToString();
