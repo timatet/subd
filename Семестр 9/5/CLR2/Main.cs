@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 public class LogFunctions
 {
-    [SqlFunction(FillRowMethodName = "LogInFile")]
+    [SqlFunction]
     public static string LogActionInFile(
         string log_file,
         string date, 
