@@ -80,7 +80,7 @@ BEGIN
 	BEGIN
 		IF (IS_ROLEMEMBER(@CL_name)=1 OR CURRENT_USER='dbo')
 		BEGIN
-			SET @CL_max_level = LEAST(@CL_max_level, @CL_level);
+			SET @CL_max_level = IIF(@CL_max_level < @CL_level, @CL_max_level, @CL_level);
 		END
 		FETCH NEXT FROM SearchUserMaxRoleLevelCursor
 		INTO @CL_level,@CL_name;
@@ -124,26 +124,21 @@ DROP SECURITY POLICY [UserSec].RLS_data_reader
 
 -- Обновление данных
 CREATE OR ALTER TRIGGER [dbo].UpdateDataClearance
-ON [dbo].[TestData] AFTER UPDATE
+ON [dbo].[TestData] AFTER UPDATE, INSERT
 AS
 BEGIN
 	DECLARE 
 		@msg NVARCHAR(max),
 		@TD_ins_id INT, 
 		@TD_ins_name NVARCHAR(50), 
-		@TD_ins_clearence NVARCHAR(50), 
-		@TD_del_id INT,
-		@TD_del_name NVARCHAR(50),
-		@TD_del_clearence NVARCHAR(50);
+		@TD_ins_clearence NVARCHAR(50);
 	DECLARE UpdateDataClearanceCursor CURSOR 
 	FOR 
 		SELECT * 
-		FROM deleted d 
-		INNER JOIN inserted i 
-		ON d.Id = i.Id;
+		FROM inserted i;
 	OPEN UpdateDataClearanceCursor;
 	FETCH NEXT FROM UpdateDataClearanceCursor 
-	INTO @TD_del_id,@TD_del_name,@TD_del_clearence,@TD_ins_id,@TD_ins_name,@TD_ins_clearence;
+	INTO @TD_ins_id,@TD_ins_name,@TD_ins_clearence;
 	WHILE @@FETCH_STATUS = 0
 	BEGIN
 	-- Находим уровень доступа текущего пользователя
@@ -154,9 +149,9 @@ BEGIN
 	-- Устанавливаем данным
 	UPDATE dbo.TestData 
 	SET clearence = @CurrentUserClearence
-	WHERE id = @TD_del_id;
+	WHERE id = @TD_ins_id;
 	FETCH NEXT FROM UpdateDataClearanceCursor 
-	INTO @TD_del_id,@TD_del_name,@TD_del_clearence,@TD_ins_id,@TD_ins_name,@TD_ins_clearence;
+	INTO @TD_ins_id,@TD_ins_name,@TD_ins_clearence;
 	END;
 	CLOSE UpdateDataClearanceCursor;
 	DEALLOCATE UpdateDataClearanceCursor;
